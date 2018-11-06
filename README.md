@@ -1,2 +1,2 @@
 # Unity-project
-This is a unity project to produce a mobile application for kids learn.
+En este proyecto se desarrollo una aplicación para moviles que consiste en un objeto dinamico de aprendisaje básico para niños.
