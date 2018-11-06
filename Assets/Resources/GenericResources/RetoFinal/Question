@@ -1,0 +1,134 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+
+public class Question
+{
+    private string _questionText;
+    private string[] _answersTexts;
+    private int _correctAnswer;
+    private int[] _correctAnswers;
+    private List<int> _currentAnsers;
+    private GameObject[] _anotherGameObjects;
+    private GameObject _answersContainerGameObject;
+
+    /// <summary>
+    /// Question with only one correct answer
+    /// </summary>
+    /// <param name="questionTest">Here comes the question string</param>
+    /// <param name="answerTexts">Here comes all the text of each answer</param>
+    /// <param name="anotherGameObjects">Another Elements to complement the question</param>
+    /// <param name="answersContainerGameObject">Set the container of your answers</param>
+    /// <param name="correctAnswer">Correct Answer, NOTE it has to be int starting in 0</param>
+    public Question(string questionTest, string[] answerTexts, GameObject[] anotherGameObjects, GameObject answersContainerGameObject, int correctAnswer)
+    {
+        _questionText = questionTest;
+        _answersTexts = answerTexts;
+        _correctAnswer = correctAnswer;
+        _currentAnsers = new List<int>();
+        _anotherGameObjects = anotherGameObjects;
+        _answersContainerGameObject = answersContainerGameObject;
+    }
+
+    /// <summary>
+    /// Question with multiple correct answers
+    /// </summary>
+    /// <param name="questionTest">Here comes the question string</param>
+    /// <param name="answerTexts">Here comes all the text of each answer</param>
+    /// <param name="anotherGameObjects">Another Elements to complement the question</param>
+    /// <param name="answersContainerGameObject">Set the container of your answers</param>
+    /// <param name="correctAnswers">Correct Answers Array, NOTE it has to be int starting in 0 </param>
+    public Question(string questionTest, string[] answerTexts, GameObject[] anotherGameObjects, GameObject answersContainerGameObject, int[] correctAnswers)
+    {
+        _questionText = questionTest;
+        _answersTexts = answerTexts;
+        _correctAnswers = correctAnswers;
+        _currentAnsers = new List<int>();
+        _anotherGameObjects = anotherGameObjects;
+        _answersContainerGameObject = answersContainerGameObject;
+    }
+
+    public List<int> GetCurrentAnswers()
+    {
+        return _currentAnsers;
+    }
+
+    public bool SetAnswer(int answerIndex)
+    {
+        if (_correctAnswers != null)
+        {
+            if (_currentAnsers.Contains(answerIndex))
+            {
+                return false;
+            }
+        }
+        else
+        {
+            _currentAnsers.Clear();
+        }
+
+        _currentAnsers.Add(answerIndex);
+        return true;
+    }
+
+    public bool ReviewQuestion()
+    {
+        if (_currentAnsers.Count > 1)
+        {
+            foreach (int answer in _currentAnsers)
+            {
+                if (_correctAnswers.Contains(answer))
+                {
+                    _currentAnsers.Remove(answer);
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            if (_currentAnsers.Count != 0)
+            {
+                return false;
+            }
+        }
+        else if (_currentAnsers.Count > 0)
+        {
+            if (_currentAnsers[0] != _correctAnswer)
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public string GetQuestionText()
+    {
+        return _questionText;
+    }
+
+    public string[] GetAnserTexts()
+    {
+        return _answersTexts;
+    }
+
+    public void SetActiveAnotherGameObjects(bool value)
+    {
+        if (_anotherGameObjects != null)
+        {
+            foreach (GameObject currentGameObject in _anotherGameObjects)
+            {
+                currentGameObject.SetActive(value);
+            }
+        }
+        
+    }
+
+    public GameObject GetAnswerContainer()
+    {
+        return _answersContainerGameObject;
+    }
+}

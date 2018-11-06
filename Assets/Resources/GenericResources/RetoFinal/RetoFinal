@@ -1,0 +1,339 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class RetoFinal : MonoBehaviour
+{
+    private List<Question> FullTest;
+    private List<Question> Test = new List<Question>();
+    private Button nextButton, backButton;
+
+
+    //Question Elements
+    private Text questionText;
+    private Text questionNumberText;
+    private int _questionIndex;
+    private GameObject questionElementsGameObject;
+    private GameObject secondQuestionGameObject,
+        tirdhQuestionGameObject,
+        fourthQuestionGameObject,
+        fifthQuestionGameObject,
+        sixthQuestionGameObject,
+        seventhQuestionGameObject,
+        eighthtQuestionGameObject;
+
+
+    //OneAnswerElements
+    private GameObject singleAnswerContainer;
+    private Color answerSettedColor = new Color32(14,209,242,255);
+    private Color defaultAnswerColor = new Color32(9,74,139,255);
+
+    //Results Elements
+    private GameObject resultPrefabGameObject;
+    private GameObject resultsContainer;
+    private Text mainResultText;
+    private Button salirRetoFinalButton;
+
+    //Message Box Elements
+    private GameObject yesNoMessageBoxGameObject;
+    private Text yesNoMessageBoxText;
+    private Button yesButton,noButton;
+
+    private void CreateRandomTest(int numberQuestions)
+    {
+        for (int i = 0; i < numberQuestions; i++)
+        {
+            int randomIndex = Random.Range(0, FullTest.Count);
+            Test.Add(FullTest[randomIndex]);
+            FullTest.RemoveAt(randomIndex);
+        }
+    }
+
+    // Use this for initialization
+    private void Start()
+    {
+        _questionIndex = 0;
+        resultsContainer = Menu.RetoFinalGameObject.transform.GetChild(1).gameObject;
+        salirRetoFinalButton = resultsContainer.transform.GetChild(1).gameObject.GetComponent<Button>();
+        mainResultText = resultsContainer.transform.GetChild(2).gameObject.GetComponent<Text>();
+        resultPrefabGameObject = resultsContainer.transform.GetChild(3).gameObject;
+
+        backButton = Menu.RetoFinalGameObject.transform.GetChild(0).GetChild(0).GetComponent<Button>();
+        nextButton = Menu.RetoFinalGameObject.transform.GetChild(0).GetChild(1).GetComponent<Button>();
+        questionText = Menu.RetoFinalGameObject.transform.GetChild(0).GetChild(2).GetComponent<Text>();
+        questionNumberText = Menu.RetoFinalGameObject.transform.GetChild(0).GetChild(2).GetChild(0).GetComponent<Text>();
+        singleAnswerContainer = Menu.RetoFinalGameObject.transform.GetChild(0).GetChild(3).gameObject;
+
+        questionElementsGameObject = Menu.RetoFinalGameObject.transform.GetChild(0).GetChild(4).gameObject;
+        secondQuestionGameObject = questionElementsGameObject.transform.GetChild(0).gameObject;
+        tirdhQuestionGameObject = questionElementsGameObject.transform.GetChild(1).gameObject;
+        fourthQuestionGameObject = questionElementsGameObject.transform.GetChild(2).gameObject;
+        fifthQuestionGameObject = questionElementsGameObject.transform.GetChild(3).gameObject;
+        sixthQuestionGameObject = questionElementsGameObject.transform.GetChild(4).gameObject;
+        seventhQuestionGameObject = questionElementsGameObject.transform.GetChild(5).gameObject;
+        eighthtQuestionGameObject = questionElementsGameObject.transform.GetChild(6).gameObject;
+
+        yesNoMessageBoxGameObject = Menu.RetoFinalGameObject.transform.GetChild(2).gameObject;
+        yesButton = yesNoMessageBoxGameObject.transform.GetChild(1).GetComponent<Button>();
+        noButton = yesNoMessageBoxGameObject.transform.GetChild(2).GetComponent<Button>();
+        yesNoMessageBoxText = yesNoMessageBoxGameObject.transform.GetChild(3).GetComponent<Text>();
+
+        FillTest();
+        CreateRandomTest(5);
+        nextButton.onClick.AddListener(delegate ()
+        {
+            NextQuestion();
+        });
+        backButton.onClick.AddListener(delegate ()
+        {
+            BackQuestion();
+        });
+
+        salirRetoFinalButton.onClick.AddListener(delegate ()
+        {
+            Menu.GoToScenarioStaticMethod(Menu.Scenarios.Menu);
+        });
+
+        yesButton.onClick.AddListener(delegate ()
+         {
+             YesMethod();
+         });
+
+        noButton.onClick.AddListener(delegate ()
+         {
+             NoMethod();
+         });
+
+        SetQuestions(0);
+
+        foreach (Transform currentButtonGameObject in singleAnswerContainer.transform)
+        {
+            int buttonIndex = currentButtonGameObject.transform.GetSiblingIndex();
+            //GameObject buttonGameObject = currentButtonGameObject.gameObject;
+            currentButtonGameObject.gameObject.GetComponent<Button>().onClick.AddListener(delegate ()
+            {
+                SetAnswer(buttonIndex, singleAnswerContainer);
+            });
+        }
+    }
+
+    private void YesMethod()
+    {
+        if (_questionIndex <= 0)
+        {
+            yesNoMessageBoxGameObject.SetActive(false);
+            Menu.GoToScenarioStaticMethod(Menu.Scenarios.Menu);
+        }
+        else
+        {
+            yesNoMessageBoxGameObject.SetActive(false);
+            EvaluateTest();
+        }
+    }
+
+    private void NoMethod()
+    {
+        yesNoMessageBoxGameObject.SetActive(false);
+    }
+
+    private void ShowMessageBox(string Message)
+    {
+        yesNoMessageBoxText.text = Message;
+        yesNoMessageBoxGameObject.SetActive(true);
+    }
+
+    private void SetAnswer(int answerIndex, GameObject answerContainerGameObject)
+    {
+        Test[_questionIndex].SetAnswer(answerIndex);
+        foreach (Transform currentButtonGameObject in answerContainerGameObject.transform)
+        {
+            if (currentButtonGameObject.transform.GetSiblingIndex() == answerIndex)
+            {
+                currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(0).gameObject.GetComponent<Text>().color = answerSettedColor;
+                currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Text>().color = answerSettedColor;
+                currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(2).gameObject.GetComponent<Image>().color = answerSettedColor;
+            }
+            else
+            {
+                currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(0).gameObject.GetComponent<Text>().color = defaultAnswerColor;
+                currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Text>().color = defaultAnswerColor;
+                currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(2).gameObject.GetComponent<Image>().color = defaultAnswerColor;
+            }
+        }
+    }
+
+    private void NextQuestion()
+    {
+        if (_questionIndex >= Test.Count - 1)
+        {
+            ShowMessageBox("SEGURO QUE QUIERES TERMINAR?");
+        }
+        else
+        {
+            if (_questionIndex >= Test.Count - 2)
+            {
+                nextButton.transform.GetChild(0).GetComponent<Text>().text = "TERMINAR";
+            }
+            else
+            {
+                backButton.transform.GetChild(0).GetComponent<Text>().text = "ATRAS";
+            }
+            _questionIndex = Mathf.Clamp(_questionIndex + 1, 0, Test.Count - 1);
+
+            SetQuestions(_questionIndex);
+        }
+    }
+
+    private void BackQuestion()
+    {
+        if (_questionIndex <= 0)
+        {
+            ShowMessageBox("SEGURO QUE QUIERES VOLVER AL INICIO?");
+        }
+        else
+        {
+            if (_questionIndex <= 1)
+            {
+                backButton.transform.GetChild(0).GetComponent<Text>().text = "INICIO";
+            }
+            else
+            {
+                nextButton.transform.GetChild(0).GetComponent<Text>().text = "SIGUIENTE";
+            }
+
+            _questionIndex = Mathf.Clamp(_questionIndex - 1, 0, Test.Count - 1);
+            SetQuestions(_questionIndex);
+        }
+    }
+
+    private void SetQuestions(int questionIndex)
+    {
+        foreach (Transform currentGameObject in questionElementsGameObject.transform)
+        {
+            currentGameObject.gameObject.SetActive(false);
+        }
+
+        questionNumberText.text = questionIndex + 1 + ".";
+        questionText.text = Test[questionIndex].GetQuestionText();
+        Test[questionIndex].SetActiveAnotherGameObjects(true);
+        GameObject answerContainerGameObject = Test[questionIndex].GetAnswerContainer();
+        int indexAnswer = 0;
+
+        foreach (string answerString in Test[questionIndex].GetAnserTexts())
+        {
+//			answerContainerGameObject.transform.GetChild(0).
+			//ToFraction(answerString, answerContainerGameObject.transform.GetChild(indexAnswer).gameObject);
+            indexAnswer++;
+        }
+
+        if (Test[questionIndex].GetCurrentAnswers().Count > 0)
+        {
+            SetAnswer(Test[questionIndex].GetCurrentAnswers()[0], answerContainerGameObject);
+        }
+        else
+        {
+            CleanAnswers(answerContainerGameObject);
+        }
+    }
+
+    private void CleanAnswers(GameObject answerContainerGameObject)
+    {
+        foreach (Transform currentButtonGameObject in answerContainerGameObject.transform)
+        {
+            currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(0).gameObject.GetComponent<Text>().color = defaultAnswerColor;
+            currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(1).gameObject.GetComponent<Text>().color = defaultAnswerColor;
+            currentButtonGameObject.gameObject.transform.GetChild(0).GetChild(2).gameObject.GetComponent<Image>().color = defaultAnswerColor;
+        }
+    }
+
+    private List<bool> answersReviewed = new List<bool>();
+
+    private void EvaluateTest()
+    {
+        
+        GameObject resultGameObject;
+        int questionPositionIndex = 0;
+        int rigthQuestions = 0;
+        foreach (Question currentQuestion in Test)
+        {
+            //currentQuestion.ReviewQuestion();
+            answersReviewed.Add(currentQuestion.ReviewQuestion());
+            //Debug.Log(currentQuestion.ReviewQuestion());
+            resultGameObject = (GameObject)Instantiate(resultPrefabGameObject, resultPrefabGameObject.transform.position + (Vector3.down * questionPositionIndex * 40), Quaternion.identity);
+            resultGameObject.transform.SetParent(resultsContainer.transform);
+            resultGameObject.transform.localScale = new Vector3(1, 1, 1);
+            resultGameObject.transform.GetChild(0).gameObject.GetComponent<Text>().text = (questionPositionIndex + 1) + ".";
+            if (currentQuestion.ReviewQuestion())
+            {
+                resultGameObject.GetComponent<Text>().text = "Correcto";
+                resultGameObject.GetComponent<Text>().color = Color.green;
+                rigthQuestions++;
+            }
+
+            questionPositionIndex++;
+        }
+
+        mainResultText.text = "CALIFICACIÓN : " + rigthQuestions * 2 + "/" + Test.Count * 2;
+        resultPrefabGameObject.SetActive(false);
+        resultsContainer.SetActive(true);
+    }
+
+    private void ToFraction(string fraction, GameObject fractionGameObject)
+    {
+        string[] numbers = fraction.Split('/');
+        fractionGameObject.transform.GetChild(0).GetChild(0).GetComponent<Text>().text = "" + numbers[0];
+        fractionGameObject.transform.GetChild(0).GetChild(1).GetComponent<Text>().text = "" + numbers[1];
+    }
+
+    private void FillTest()
+    {
+        
+        FullTest = new List<Question>();
+        FullTest.Add(new Question("Un tríptico es:",
+                               new string[] { "Una historia que se cuenta en tres actos distintos", "b b.	Una hoja doblada en tres partes que contiene información o publicidad relevante", "c.	Una hoja en la que se busca informar o anunciar algo sobre los acontencimientos actuales" },
+                               null,
+                               singleAnswerContainer,
+                               1));
+        FullTest.Add(new Question("¿Cuál de las siguientes no es una característica de los trípticos?",
+                               new string[] { "Informa sobre las noticias más relevantes", "Incluye textos e imágenes", "Ocupa poco espacio y tiene seis caras" },
+                               new GameObject[] { secondQuestionGameObject }, 
+                               singleAnswerContainer,
+                               0));
+        FullTest.Add(new Question("¿Cuál de las siguientes es una buena recomendación para prevenir el bullying?",
+                               new string[] { "Ser espía del profesor e informar sobre la vida de mis compañeros", "Fomentar ambiente de tolerancia y respeto en el aula", "Escribir bitácoras sobre lo que sucede en el aula" },
+                               new GameObject[] { tirdhQuestionGameObject },
+                               singleAnswerContainer,
+                               1));
+        FullTest.Add(new Question("Se puede decir que existe agresión física cuando:",
+                               new string[] { " Se mandan mensajes ofensivos por vías electrónicas", " Se ponen apodos", "Se causa un daño físico a otra persona a través de un golpe, empujón o cualquier tipo de interacción donde exista contacto físico" },
+                               new GameObject[] { fourthQuestionGameObject },
+                               singleAnswerContainer,
+                               2));//5
+        FullTest.Add(new Question("¿Cuál de las siguientes definiciones es la que corresponde al bullying?",
+                               new string[] { "Agresión verbal pero no física", "Agresión constante y repetida", "Agresión física pero no verbal" },
+                               new GameObject[] { fifthQuestionGameObject },
+                               singleAnswerContainer,
+                               1));
+        FullTest.Add(new Question("¿Cuál de las siguientes situaciones se demuestra la importancia de informar a un adulto una situación de bullying?",
+                               new string[] { "La figura de mediador es muy importante en una situación de bullying y un adulto sabrá cómo actuar ante circunstancias como éstas", "b.	La figura de mediador es importante pero un adulto sabrá cómo reprender a los involucrados", "La figura de mediador es muy importante y un adulto suele conocer más las consecuencias que deben sufrir los agresores" },
+                               new GameObject[] { sixthQuestionGameObject },
+                               singleAnswerContainer,
+                               0));//7
+        FullTest.Add(new Question("¿Cuál característica corresponde a un tríptico?",
+                               new string[] { "a.	Es un folleto actualizado con lo último del momento", "Es un folleto de promoción", "Es un folleto publicitario" },
+                               new GameObject[] { seventhQuestionGameObject },
+                               singleAnswerContainer,
+                               2));//8
+        FullTest.Add(new Question("¿Quiénes son los involucrados en una situación de bullying?",
+                               new string[] { "Golpeador y víctima", "Agresor y ofendido", "Agresor y agredido" },
+                               new GameObject[] { eighthtQuestionGameObject },
+                               singleAnswerContainer,
+                               2));
+        FullTest.Add(new Question("Ejemplo de bullying:",
+                               new string[] { "a.	Poner apodos y llamar así al compañero", "Hacer una reunión y excluir a algunos ", "Hacer siempre equipo con los mismos compañeros" },
+                               new GameObject[] { eighthtQuestionGameObject },
+                               singleAnswerContainer,
+                               0));
+    }
+}
